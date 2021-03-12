@@ -1,0 +1,372 @@
+package userinterface;
+
+import game.Ant;
+import game.Board;
+import game.Cell;
+import game.Coordinate;
+import game.Grid;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Map;
+
+/**
+ * Shell to run Langton's Ant.
+ */
+public class Shell {
+
+  // ANSI escape sequence to reset the color
+  private static final String ANSI_RESET = "\u001B[0m";
+
+  // state config representation
+  private static final char TURN_RIGHT = 'R';
+  private static final char TURN_LEFT = 'L';
+
+  // currently possible number of states (2-12 are possible)
+  private static final int MINIMUM_NUMBER_OF_STATES = 2;
+  private static final int MAXIMUM_NUMBER_OF_STATES = 12;
+
+  // currently possible number of ants
+  private static final int MAXIMUM_NUMBER_OF_ANTS = 1;
+
+  // common error messages
+  private static final String INVALID_INPUT_MESSAGE = "Error! Invalid input.";
+  private static final String COMMAND_DOESNT_EXIST_MESSAGE = "Error! This command does not exist.";
+  private static final String NO_BOARD_EXISTING_MESSAGE = "Error! No board existing.";
+  private static final String NO_ANT_EXISTING_MESSAGE = "Error! No ant existing.";
+
+  private Shell() {
+    // Generating objects of this class is not intended.
+  }
+
+  /**
+   * Starts a new shell that waits for user input.
+   * 
+   * @param args command line arguments
+   * @throws IOException if a problem with the InputStream occurs
+   */
+  public static void main(String[] args) throws IOException {
+    final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+    runAnt(stdin);
+  }
+
+  /**
+   * Helper method to run the default mode.
+   * 
+   * @throws IOException if a problem with the InputStream occurs
+   */
+  private static void runAnt(final BufferedReader stdin) throws IOException {
+    Grid game = null;
+    boolean run = true;
+
+    while (run) {
+      System.out.print("ant> ");
+      final String input = stdin.readLine();
+      if (input == null) {
+        break;
+      }
+      final String[] tokens = input.trim().split("\\s+");
+      final String firstInput = tokens[0];
+      final ShellCommand command = identifyCommand(firstInput, tokens);
+
+      switch (command) {
+        case NEW:
+          game = newHelper(game, tokens);
+          break;
+        case ANT:
+          antHelper(game, tokens);
+          break;
+        case UNANT:
+          unantHelper(game);
+          break;
+        case STEP:
+          stepHelper(game);
+          break;
+        case MULTIPLE_STEPS:
+          stepHelper(game, tokens);
+          break;
+        case PRINT:
+          printHelper(game);
+          break;
+        case CLEAR:
+          clearHelper(game);
+          break;
+        case RESIZE:
+          resizeHelper(game, tokens);
+          break;
+        case HELP:
+          helpPrinter();
+          break;
+        case QUIT:
+          run = false;
+          break;
+        default:
+          System.out.println(COMMAND_DOESNT_EXIST_MESSAGE);
+          break;
+      }
+    }
+  }
+
+  /** Helper method for the command "new". Also checks all parameters for errors. */
+  private static Grid newHelper(final Grid game, final String[] parameters) {
+    if (!checkForNaturalNumbers(Arrays.copyOf(parameters, parameters.length - 1))) {
+      System.out.println(INVALID_INPUT_MESSAGE);
+      return game;
+    } else if (!checkForCorrectStates(parameters[parameters.length - 1])) {
+      System.out.println("Error! Invalid states.");
+      return game;
+    }
+
+    final int cols = Integer.parseInt(parameters[1]);
+    final int rows = Integer.parseInt(parameters[2]);
+    final String states = parameters[3];
+    return new Board(cols, rows, states);
+  }
+
+  /** Helper method for the command "ant". Also checks all parameters for errors. */
+  private static void antHelper(final Grid game, final String[] parameters) {
+    if (game == null) {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      return;
+    } else if (game.getAnts().size() == MAXIMUM_NUMBER_OF_ANTS) {
+      System.out.println("Error! Only one ant is allowed at once.");
+      return;
+    } else if (!checkForNegativeNumbers(parameters)) {
+      System.out.println(INVALID_INPUT_MESSAGE);
+      return;
+    }
+
+    final int antX = Integer.parseInt(parameters[1]);
+    final int antY = Integer.parseInt(parameters[2]);
+    if (antX >= game.getWidth() || antY >= game.getHeight()) {
+      System.out.println("Error! Index out of range.");
+      return;
+    }
+    game.setAnt(new Ant(antX, antY), antX, antY);
+  }
+
+  /** Helper method for the command "unant". */
+  private static void unantHelper(final Grid game) {
+    if (game == null) {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      return;
+    } else if (game.getAnts().isEmpty()) {
+      System.out.println(NO_ANT_EXISTING_MESSAGE);
+    } else {
+      game.clearAnts();
+    }
+  }
+
+  /** Helper method for the command "step". */
+  private static void stepHelper(final Grid game) {
+    if (game != null && !game.getAnts().isEmpty()) {
+      game.performStep();
+      System.out.println(game.getStepCount());
+    } else if (game != null && game.getAnts().isEmpty()) {
+      System.out.println(NO_ANT_EXISTING_MESSAGE);
+    } else {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+    }
+  }
+
+  /**
+   * Helper method for the command "step 'n'" i.e. multiple steps. Also checks all parameters for
+   * errors.
+   */
+  private static void stepHelper(final Grid game, final String[] parameters) {
+    if (!checkForInvalidInput(parameters)) {
+      System.out.println(INVALID_INPUT_MESSAGE);
+      return;
+    } else if (game == null) {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      return;
+    }
+    final int numberOfSteps = Integer.parseInt(parameters[1]);
+    if (numberOfSteps > 0) {
+      if (game.getAnts().isEmpty()) {
+        System.out.println(NO_ANT_EXISTING_MESSAGE);
+        return;
+      }
+      game.performStep(numberOfSteps);
+    } else {
+      if (numberOfSteps == 0) {
+        System.out.println(INVALID_INPUT_MESSAGE);
+        return;
+      }
+      game.reset(-numberOfSteps);
+    }
+    System.out.println(game.getStepCount());
+  }
+
+  /** Helper method for the command "print". */
+  private static void printHelper(final Grid game) {
+    if (game != null) {
+      printGrid(game);
+    } else {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+    }
+  }
+
+  /** Helper method for the command "clear". */
+  private static void clearHelper(final Grid game) {
+    if (game != null) {
+      game.clear();
+    } else {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+    }
+  }
+
+  /** Helper method for the command "resize". */
+  private static void resizeHelper(final Grid game, final String[] parameters) {
+    if (game == null) {
+      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      return;
+    } else if (!checkForNaturalNumbers(parameters)) {
+      System.out.println(INVALID_INPUT_MESSAGE);
+      return;
+    }
+
+    final int cols = Integer.parseInt(parameters[1]);
+    final int rows = Integer.parseInt(parameters[2]);
+    game.resize(cols, rows);
+  }
+
+  /** Helper method to print the help texts for all commands. */
+  private static void helpPrinter() {
+    System.out.println("\n=== All possible commands: ===\n");
+    for (final ShellCommand cmd : ShellCommand.values()) {
+      System.out.println(cmd.getHelpText() + "\n");
+    }
+  }
+
+  /** Prints a textual represantion of the current grid. */
+  private static void printGrid(Grid game) {
+    for (int i = 0; i < game.getHeight(); i++) {
+      int j = 0;
+      for (Cell c : game.getRow(i)) {
+        for (final StateRepresentation state : StateRepresentation.values()) {
+          if (state.getNumber() == c.getState()) {
+            System.out.print(
+                state.getColor() + printCell(game, i, j, state.getRepresantation()) + ANSI_RESET);
+          }
+        }
+        j++;
+      }
+      System.out.println();
+    }
+  }
+
+  /** Prints the current cell (with or without ant). */
+  private static String printCell(Grid game, int y, int x, String state) {
+    if (game.getAnts().isEmpty()) {
+      return state;
+    }
+    Ant currentAnt = null;
+    Coordinate antCoordinate = null;
+    for (Map.Entry<Coordinate, Ant> entry : game.getAnts().entrySet()) {
+      antCoordinate = entry.getKey();
+      currentAnt = entry.getValue();
+    }
+    int antX = antCoordinate.getX();
+    int antY = antCoordinate.getY();
+    if (antX == x && antY == y) {
+      switch (currentAnt.getOrientation()) {
+        case EAST:
+          return ">";
+        case NORTH:
+          return "^";
+        case SOUTH:
+          return "v";
+        case WEST:
+          return "<";
+        default:
+          break;
+      }
+    }
+    return state;
+  }
+
+  /** Helper method identify a given command. */
+  private static ShellCommand identifyCommand(String possibleCommand, final String[] parameters) {
+    possibleCommand = possibleCommand.toLowerCase();
+
+    if (possibleCommand.trim().isEmpty()) {
+      // catch empty input
+      return ShellCommand.UNKNOWN;
+    }
+
+    for (final ShellCommand cmd : ShellCommand.values()) {
+      boolean commandHasCorrectString = cmd.getCommandAsString().equals(possibleCommand);
+      // check if the command is the first letter of a possible command
+      boolean commandIsFirstLetter = cmd.getCommandAsString().charAt(0) == possibleCommand.charAt(0)
+          && possibleCommand.length() == 1;
+      boolean commandHasCorrectParameterNumber = cmd.getParameterNumber() == parameters.length;
+      boolean commandIsCorrect =
+          (commandHasCorrectString || commandIsFirstLetter) && commandHasCorrectParameterNumber;
+
+      if (commandIsCorrect) {
+        return cmd;
+      }
+    }
+    // command does not exist
+    return ShellCommand.UNKNOWN;
+  }
+
+  /** Checks if a String[] (beginning at index 1) contains only numbers. */
+  private static boolean checkForInvalidInput(final String[] input) {
+    for (int i = 1; i < input.length; i++) {
+      try {
+        Integer.parseInt(input[i]);
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Checks if a String[] (beginning at index 1) contains only non-negative numbers. */
+  private static boolean checkForNegativeNumbers(final String[] input) {
+    for (int i = 1; i < input.length; i++) {
+      try {
+        if (Integer.parseInt(input[i]) < 0) {
+          return false;
+        }
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Checks if a String[] (beginning at index 1) contains only natural numbers. */
+  private static boolean checkForNaturalNumbers(final String[] input) {
+    for (int i = 1; i < input.length; i++) {
+      try {
+        if (Integer.parseInt(input[i]) < 1) {
+          return false;
+        }
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Checks if the correct state configuration was used i.e. if the given String consists only of
+   * the capital letters 'R' and 'L' and its length is between 2 and 12.
+   */
+  private static boolean checkForCorrectStates(final String input) {
+    if (input.length() < MINIMUM_NUMBER_OF_STATES || input.length() > MAXIMUM_NUMBER_OF_STATES) {
+      return false;
+    }
+    for (final char currentChar : input.toCharArray()) {
+      if (currentChar != TURN_RIGHT && currentChar != TURN_LEFT) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+}
