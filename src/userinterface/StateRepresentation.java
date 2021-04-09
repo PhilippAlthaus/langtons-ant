@@ -41,7 +41,7 @@ enum StateRepresentation {
   }
 
   /** Returns the state's textual representation. */
-  String getRepresantation() {
+  String getRepresentation() {
     return representation;
   }
 

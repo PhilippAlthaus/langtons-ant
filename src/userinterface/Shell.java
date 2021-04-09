@@ -5,10 +5,10 @@ import game.Board;
 import game.Cell;
 import game.Coordinate;
 import game.Grid;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -31,13 +31,15 @@ public class Shell {
   private static final int MAXIMUM_NUMBER_OF_ANTS = 1;
 
   // common error messages
-  private static final String INVALID_INPUT_MESSAGE = "Error! Invalid input.";
-  private static final String COMMAND_DOESNT_EXIST_MESSAGE = "Error! This command does not exist.";
-  private static final String NO_BOARD_EXISTING_MESSAGE = "Error! No board existing.";
-  private static final String NO_ANT_EXISTING_MESSAGE = "Error! No ant existing.";
+  private static final String INVALID_INPUT = "Error! Invalid input.";
+  private static final String INVALID_STATES = "Error! Invalid states.";
+  private static final String COMMAND_DOESNT_EXIST = "Error! This command does not exist.";
+  private static final String NO_BOARD_EXISTING = "Error! No board existing.";
+  private static final String NO_ANT_EXISTING = "Error! No ant existing.";
 
   private Shell() {
     // Generating objects of this class is not intended.
+    throw new AssertionError();
   }
 
   /**
@@ -62,10 +64,12 @@ public class Shell {
 
     while (run) {
       System.out.print("ant> ");
+
       final String input = stdin.readLine();
       if (input == null) {
         break;
       }
+
       final String[] tokens = input.trim().split("\\s+");
       final String firstInput = tokens[0];
       final ShellCommand command = identifyCommand(firstInput, tokens);
@@ -102,7 +106,7 @@ public class Shell {
           run = false;
           break;
         default:
-          System.out.println(COMMAND_DOESNT_EXIST_MESSAGE);
+          printError(COMMAND_DOESNT_EXIST);
           break;
       }
     }
@@ -110,37 +114,43 @@ public class Shell {
 
   /** Helper method for the command "new". Also checks all parameters for errors. */
   private static Grid newHelper(final Grid game, final String[] parameters) {
-    if (!checkForNaturalNumbers(Arrays.copyOf(parameters, parameters.length - 1))) {
-      System.out.println(INVALID_INPUT_MESSAGE);
+    boolean parametersAreNonNegative =
+        !checkForNaturalNumbers(parameters, 0, parameters.length - 1);
+    boolean statesAreInvalid = !checkForCorrectStates(parameters[parameters.length - 1]);
+
+    if (parametersAreNonNegative) {
+      printError(INVALID_INPUT);
       return game;
-    } else if (!checkForCorrectStates(parameters[parameters.length - 1])) {
-      System.out.println("Error! Invalid states.");
+    } else if (statesAreInvalid) {
+      printError(INVALID_STATES);
       return game;
     }
 
-    final int cols = Integer.parseInt(parameters[1]);
+    final int columns = Integer.parseInt(parameters[1]);
     final int rows = Integer.parseInt(parameters[2]);
     final String states = parameters[3];
-    return new Board(cols, rows, states);
+
+    return new Board(columns, rows, states);
   }
 
   /** Helper method for the command "ant". Also checks all parameters for errors. */
   private static void antHelper(final Grid game, final String[] parameters) {
     if (game == null) {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
       return;
     } else if (game.getAnts().size() == MAXIMUM_NUMBER_OF_ANTS) {
       System.out.println("Error! Only one ant is allowed at once.");
       return;
     } else if (!checkForNegativeNumbers(parameters)) {
-      System.out.println(INVALID_INPUT_MESSAGE);
+      System.out.println(INVALID_INPUT);
       return;
     }
 
     final int antX = Integer.parseInt(parameters[1]);
     final int antY = Integer.parseInt(parameters[2]);
+
     if (antX >= game.getWidth() || antY >= game.getHeight()) {
-      System.out.println("Error! Index out of range.");
+      printError("Error! Index out of range.");
       return;
     }
     game.setAnt(new Ant(antX, antY), antX, antY);
@@ -149,10 +159,10 @@ public class Shell {
   /** Helper method for the command "unant". */
   private static void unantHelper(final Grid game) {
     if (game == null) {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
       return;
     } else if (game.getAnts().isEmpty()) {
-      System.out.println(NO_ANT_EXISTING_MESSAGE);
+      printError(NO_ANT_EXISTING);
     } else {
       game.clearAnts();
     }
@@ -164,9 +174,9 @@ public class Shell {
       game.performStep();
       System.out.println(game.getStepCount());
     } else if (game != null && game.getAnts().isEmpty()) {
-      System.out.println(NO_ANT_EXISTING_MESSAGE);
+      printError(NO_ANT_EXISTING);
     } else {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
     }
   }
 
@@ -176,22 +186,22 @@ public class Shell {
    */
   private static void stepHelper(final Grid game, final String[] parameters) {
     if (!checkForInvalidInput(parameters)) {
-      System.out.println(INVALID_INPUT_MESSAGE);
+      printError(INVALID_INPUT);
       return;
     } else if (game == null) {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
       return;
     }
     final int numberOfSteps = Integer.parseInt(parameters[1]);
     if (numberOfSteps > 0) {
       if (game.getAnts().isEmpty()) {
-        System.out.println(NO_ANT_EXISTING_MESSAGE);
+        printError(NO_ANT_EXISTING);
         return;
       }
       game.performStep(numberOfSteps);
     } else {
       if (numberOfSteps == 0) {
-        System.out.println(INVALID_INPUT_MESSAGE);
+        printError(INVALID_INPUT);
         return;
       }
       game.reset(-numberOfSteps);
@@ -204,7 +214,7 @@ public class Shell {
     if (game != null) {
       printGrid(game);
     } else {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
     }
   }
 
@@ -213,22 +223,23 @@ public class Shell {
     if (game != null) {
       game.clear();
     } else {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
     }
   }
 
   /** Helper method for the command "resize". */
   private static void resizeHelper(final Grid game, final String[] parameters) {
     if (game == null) {
-      System.out.println(NO_BOARD_EXISTING_MESSAGE);
+      printError(NO_BOARD_EXISTING);
       return;
-    } else if (!checkForNaturalNumbers(parameters)) {
-      System.out.println(INVALID_INPUT_MESSAGE);
+    } else if (!checkForNaturalNumbers(parameters, 0, parameters.length - 1)) {
+      printError(INVALID_INPUT);
       return;
     }
 
     final int cols = Integer.parseInt(parameters[1]);
     final int rows = Integer.parseInt(parameters[2]);
+
     game.resize(cols, rows);
   }
 
@@ -240,7 +251,7 @@ public class Shell {
     }
   }
 
-  /** Prints a textual represantion of the current grid. */
+  /** Prints a textual representation of the current grid. */
   private static void printGrid(Grid game) {
     for (int i = 0; i < game.getHeight(); i++) {
       int j = 0;
@@ -248,7 +259,7 @@ public class Shell {
         for (final StateRepresentation state : StateRepresentation.values()) {
           if (state.getNumber() == c.getState()) {
             System.out.print(
-                state.getColor() + printCell(game, i, j, state.getRepresantation()) + ANSI_RESET);
+                state.getColor() + printCell(game, i, j, state.getRepresentation()) + ANSI_RESET);
           }
         }
         j++;
@@ -340,8 +351,9 @@ public class Shell {
   }
 
   /** Checks if a String[] (beginning at index 1) contains only natural numbers. */
-  private static boolean checkForNaturalNumbers(final String[] input) {
-    for (int i = 1; i < input.length; i++) {
+  private static boolean checkForNaturalNumbers(final String[] input, final int start,
+      final int end) {
+    for (int i = start; i < end; i++) {
       try {
         if (Integer.parseInt(input[i]) < 1) {
           return false;
@@ -367,6 +379,11 @@ public class Shell {
       }
     }
     return true;
+  }
+
+  /** Prints the specified string to standard out. */
+  private static void printError(String errorMessage) {
+    System.out.println(errorMessage);
   }
 
 }
