@@ -38,9 +38,9 @@ public class Ant {
    * @param another the {@code Ant} to be copied
    */
   private Ant(Ant another) {
-    this.xCoordinate = another.xCoordinate;
-    this.yCoordinate = another.yCoordinate;
-    this.orientation = another.orientation;
+    xCoordinate = another.xCoordinate;
+    yCoordinate = another.yCoordinate;
+    orientation = another.orientation;
   }
 
   /**
@@ -48,6 +48,7 @@ public class Ant {
    * 
    * @param x non-negative x-Coordinate of the cell the ant is set to
    * @param y non-negative y-Coordinate of the cell the ant is set to
+   * @return the newly created {@code Ant}
    */
   public static Ant create(int x, int y) {
     return new Ant(x, y);
@@ -106,6 +107,7 @@ public class Ant {
         xCoordinate--;
         break;
       default:
+        // unreachable
         throw new AssertionError();
     }
   }
@@ -126,6 +128,7 @@ public class Ant {
         orientation = Direction.NORTH;
         break;
       default:
+        // unreachable
         throw new AssertionError();
     }
   }
@@ -146,6 +149,7 @@ public class Ant {
         orientation = Direction.SOUTH;
         break;
       default:
+        // unreachable
         throw new AssertionError();
     }
   }

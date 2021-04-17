@@ -17,6 +17,11 @@ public class AntCell implements Cell {
     this.state = 0;
   }
 
+  /**
+   * Creates a new {@code AntCell}.
+   * 
+   * @return the newly created {@code AntCell}
+   */
   public static AntCell create() {
     return new AntCell();
   }

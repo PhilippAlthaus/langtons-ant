@@ -36,6 +36,8 @@ public class Shell {
   private static final String COMMAND_DOESNT_EXIST = "Error! This command does not exist.";
   private static final String NO_BOARD_EXISTING = "Error! No board existing.";
   private static final String NO_ANT_EXISTING = "Error! No ant existing.";
+  private static final String TOO_MANY_ANTS = "Error! Only one ant is allowed at once.";
+  private static final String INDEX_OUT_OF_RANGE = "Error! Index out of range.";
 
   private Shell() {
     // generating objects of this class is not intended
@@ -114,8 +116,7 @@ public class Shell {
 
   /** Helper method for the command "new". Also checks all parameters for errors. */
   private static Grid newHelper(final Grid game, final String[] parameters) {
-    boolean parametersAreNonNegative =
-        !checkForNaturalNumbers(parameters, 0, parameters.length - 1);
+    boolean parametersAreNonNegative = !containsNegativeNumbers(parameters);
     boolean statesAreInvalid = !checkForCorrectStates(parameters[parameters.length - 1]);
 
     if (parametersAreNonNegative) {
@@ -139,10 +140,10 @@ public class Shell {
       printError(NO_BOARD_EXISTING);
       return;
     } else if (game.getAnts().size() == MAXIMUM_NUMBER_OF_ANTS) {
-      System.out.println("Error! Only one ant is allowed at once.");
+      printError(TOO_MANY_ANTS);
       return;
-    } else if (!checkForNegativeNumbers(parameters)) {
-      System.out.println(INVALID_INPUT);
+    } else if (!containsNegativeNumbers(parameters)) {
+      printError(INVALID_INPUT);
       return;
     }
 
@@ -150,7 +151,7 @@ public class Shell {
     final int yCoordinate = Integer.parseInt(parameters[2]);
 
     if (xCoordinate >= game.getWidth() || yCoordinate >= game.getHeight()) {
-      printError("Error! Index out of range.");
+      printError(INDEX_OUT_OF_RANGE);
       return;
     }
 
@@ -233,15 +234,15 @@ public class Shell {
     if (game == null) {
       printError(NO_BOARD_EXISTING);
       return;
-    } else if (!checkForNaturalNumbers(parameters, 0, parameters.length - 1)) {
+    } else if (containsNegativeNumbers(parameters)) {
       printError(INVALID_INPUT);
       return;
     }
 
-    final int cols = Integer.parseInt(parameters[1]);
+    final int columns = Integer.parseInt(parameters[1]);
     final int rows = Integer.parseInt(parameters[2]);
 
-    game.resize(cols, rows);
+    game.resize(columns, rows);
   }
 
   /** Helper method to print the help texts for all commands. */
@@ -274,14 +275,18 @@ public class Shell {
     if (game.getAnts().isEmpty()) {
       return state;
     }
+
     Ant currentAnt = null;
     Coordinate antCoordinate = null;
+
     for (Map.Entry<Coordinate, Ant> entry : game.getAnts().entrySet()) {
       antCoordinate = entry.getKey();
       currentAnt = entry.getValue();
     }
-    int antX = antCoordinate.getX();
-    int antY = antCoordinate.getY();
+
+    final int antX = antCoordinate.getX();
+    final int antY = antCoordinate.getY();
+
     if (antX == x && antY == y) {
       switch (currentAnt.getOrientation()) {
         case EAST:
@@ -337,33 +342,18 @@ public class Shell {
     return true;
   }
 
-  /** Checks if a String[] (beginning at index 1) contains only non-negative numbers. */
-  private static boolean checkForNegativeNumbers(final String[] input) {
+  /** Checks if a String[] (beginning at index 1) contains non-negative numbers. */
+  private static boolean containsNegativeNumbers(final String[] input) {
     for (int i = 1; i < input.length; i++) {
       try {
         if (Integer.parseInt(input[i]) < 0) {
-          return false;
+          return true;
         }
       } catch (NumberFormatException e) {
         return false;
       }
     }
-    return true;
-  }
-
-  /** Checks if a String[] (beginning at index 1) contains only natural numbers. */
-  private static boolean checkForNaturalNumbers(final String[] input, final int start,
-      final int end) {
-    for (int i = start; i < end; i++) {
-      try {
-        if (Integer.parseInt(input[i]) < 1) {
-          return false;
-        }
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-    return true;
+    return false;
   }
 
   /**
@@ -384,7 +374,7 @@ public class Shell {
 
   /** Prints the specified string to standard out. */
   private static void printError(String errorMessage) {
-    System.out.println(errorMessage);
+    System.err.println(errorMessage);
   }
 
 }
