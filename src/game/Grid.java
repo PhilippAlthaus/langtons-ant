@@ -7,7 +7,7 @@ import java.util.Map;
  * An interface for all classes implementing the game Langton's Ant. Specifies all operations that
  * should be supported. Langton's Ant is mathematical game consisting of an ant that moves on the
  * grid in a specified way and switches the color of the positions it visited. The game can also be
- * descriped as cellular automaton and is Turing complete.
+ * described as cellular automaton and is Turing complete.
  */
 public interface Grid {
 
@@ -62,24 +62,24 @@ public interface Grid {
   /**
    * Returns the column at the given x-Coordinate.
    * 
-   * @param i the x-Coordinate
+   * @param x the x-Coordinate
    */
-  List<Cell> getColumn(int i);
+  List<Cell> getColumn(int x);
 
   /**
    * Returns the row at the given y-Coordinate.
    * 
-   * @param j the y-Coordinate
+   * @param y the y-Coordinate
    */
-  List<Cell> getRow(int j);
+  List<Cell> getRow(int y);
 
   /**
    * Changes the size of the {@code Grid}.
    * 
-   * @param cols the new number of cols
+   * @param cols the new number of columns
    * @param rows the new number of rows
    */
-  void resize(int cols, int rows);
+  void resize(int columns, int rows);
 
   /**
    * Resets the entire {@code Grid} i.e. resets all cells, deletes the current {@code Ant}.

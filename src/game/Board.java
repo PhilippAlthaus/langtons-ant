@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class Board implements Grid {
 
-  // int representation of where the ant has to turn
+  // integer representation of where the ant has to turn
   private static final int TURN_RIGHT = 0;
   private static final int TURN_LEFT = 1;
 
@@ -48,12 +48,12 @@ public class Board implements Grid {
    * @param states the state configuration i.e. where the ant turns at which state (min 2 max 12
    *        states), currently only R and L are allowed
    */
-  public Board(int width, int height, String states) {
+  private Board(int width, int height, String states) {
     // initialize an empty grid
     this.grid = new Cell[width][height];
     for (int i = 0; i < width; i++) {
       for (int j = 0; j < height; j++) {
-        grid[i][j] = new AntCell();
+        grid[i][j] = AntCell.create();
       }
     }
 
@@ -64,7 +64,11 @@ public class Board implements Grid {
       // to add more moves (e.g. step forward, turn around, etc.) edit this if-else-statement
       whereToTurn.put(i, states.charAt(i) == 'R' ? TURN_RIGHT : TURN_LEFT);
     }
-    this.antMoves = new LinkedList<Ant>();
+    this.antMoves = new LinkedList<>();
+  }
+
+  public static Board create(int width, int height, String states) {
+    return new Board(width, height, states);
   }
 
   @Override
@@ -74,7 +78,7 @@ public class Board implements Grid {
 
   @Override
   public Map<Coordinate, Ant> getAnts() {
-    Map<Coordinate, Ant> ants = new HashMap<Coordinate, Ant>();
+    Map<Coordinate, Ant> ants = new HashMap<>();
     if (singleAnt != null) {
       ants.put(new Coordinate(singleAnt.getX(), singleAnt.getY()), singleAnt);
     }
@@ -95,7 +99,7 @@ public class Board implements Grid {
   public void performStep(int number) {
     for (int i = 0; i < number; i++) {
       // save the current ant
-      antMoves.add(new Ant(singleAnt));
+      antMoves.add(Ant.copyOf(singleAnt));
       // switch the state of the cell where the ant currently is
       Cell antPosition = grid[singleAnt.getX()][singleAnt.getY()];
       ((AntCell) antPosition).switchToNextState(getNumberOfStates());
@@ -128,7 +132,7 @@ public class Board implements Grid {
     int temp = stepCount - number;
     clear();
     for (int i = 0; i < temp; i++) {
-      singleAnt = new Ant(antMoves.get(i));
+      singleAnt = Ant.copyOf(antMoves.get(i));
       final int antX = singleAnt.getX();
       final int antY = singleAnt.getY();
       if (antX < getWidth() && antY < getHeight()) {
@@ -195,7 +199,7 @@ public class Board implements Grid {
         if (y < getWidth() && x < getHeight()) {
           downsizedGrid[x][y] = grid[x + xAxisShift][y + yAxisShift];
         } else {
-          downsizedGrid[x][y] = new AntCell();
+          downsizedGrid[x][y] = AntCell.create();
         }
       }
     }
@@ -242,7 +246,7 @@ public class Board implements Grid {
         if (currentPositionHasToBeInsertedFromOldGrid) {
           expandedGrid[x][y] = grid[x - xAxisShift][y - yAxisShift];
         } else {
-          expandedGrid[x][y] = new AntCell();
+          expandedGrid[x][y] = AntCell.create();
         }
       }
     }
@@ -265,7 +269,7 @@ public class Board implements Grid {
   public void clear() {
     for (int i = 0; i < getWidth(); i++) {
       for (int j = 0; j < getHeight(); j++) {
-        grid[i][j] = new AntCell();
+        grid[i][j] = AntCell.create();
       }
     }
     singleAnt = null;

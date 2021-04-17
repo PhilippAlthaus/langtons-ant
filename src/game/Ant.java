@@ -26,9 +26,9 @@ public class Ant {
    * @param x non-negative x-Coordinate of the cell the ant is set to
    * @param y non-negative y-Coordinate of the cell the ant is set to
    */
-  public Ant(int x, int y) {
-    this.xCoordinate = x;
-    this.yCoordinate = y;
+  private Ant(int x, int y) {
+    xCoordinate = x;
+    yCoordinate = y;
     orientation = Direction.WEST;
   }
 
@@ -37,10 +37,30 @@ public class Ant {
    * 
    * @param another the {@code Ant} to be copied
    */
-  public Ant(Ant another) {
+  private Ant(Ant another) {
     this.xCoordinate = another.xCoordinate;
     this.yCoordinate = another.yCoordinate;
     this.orientation = another.orientation;
+  }
+
+  /**
+   * Creates a new {@code Ant}.
+   * 
+   * @param x non-negative x-Coordinate of the cell the ant is set to
+   * @param y non-negative y-Coordinate of the cell the ant is set to
+   */
+  public static Ant create(int x, int y) {
+    return new Ant(x, y);
+  }
+
+  /**
+   * Creates a (deep) copy of a given {@code Ant}.
+   * 
+   * @param original the {@code Ant} to be copied
+   * @return the copied {@code Ant}
+   */
+  public static Ant copyOf(Ant original) {
+    return new Ant(original);
   }
 
   /** Returns the x-Coordinate. */

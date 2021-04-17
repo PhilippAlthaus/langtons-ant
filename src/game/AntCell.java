@@ -13,8 +13,12 @@ public class AntCell implements Cell {
   /**
    * Creates a new {@code AntCell}.
    */
-  public AntCell() {
+  private AntCell() {
     this.state = 0;
+  }
+
+  public static AntCell create() {
+    return new AntCell();
   }
 
   @Override
@@ -34,7 +38,7 @@ public class AntCell implements Cell {
    * Switches the {@code Cell}'s state to the previous state. In order to follow the game's rules
    * the last state will be taken if an overflow would occur.
    */
-  void switchToPrevState(int states) {
+  void switchToPreviousState(int states) {
     state = (state + (states - 1)) % states;
   }
 

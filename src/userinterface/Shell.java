@@ -38,7 +38,7 @@ public class Shell {
   private static final String NO_ANT_EXISTING = "Error! No ant existing.";
 
   private Shell() {
-    // Generating objects of this class is not intended.
+    // generating objects of this class is not intended
     throw new AssertionError();
   }
 
@@ -130,7 +130,7 @@ public class Shell {
     final int rows = Integer.parseInt(parameters[2]);
     final String states = parameters[3];
 
-    return new Board(columns, rows, states);
+    return Board.create(columns, rows, states);
   }
 
   /** Helper method for the command "ant". Also checks all parameters for errors. */
@@ -146,14 +146,15 @@ public class Shell {
       return;
     }
 
-    final int antX = Integer.parseInt(parameters[1]);
-    final int antY = Integer.parseInt(parameters[2]);
+    final int xCoordinate = Integer.parseInt(parameters[1]);
+    final int yCoordinate = Integer.parseInt(parameters[2]);
 
-    if (antX >= game.getWidth() || antY >= game.getHeight()) {
+    if (xCoordinate >= game.getWidth() || yCoordinate >= game.getHeight()) {
       printError("Error! Index out of range.");
       return;
     }
-    game.setAnt(new Ant(antX, antY), antX, antY);
+
+    game.setAnt(Ant.create(xCoordinate, yCoordinate), xCoordinate, yCoordinate);
   }
 
   /** Helper method for the command "unant". */
