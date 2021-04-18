@@ -8,4 +8,6 @@ The ant can travel in any direction at each step it takes. The rules are as foll
 
 This original version has been extended where instead of just two colors, more colors are used. The colors are modified in a cyclic fashion.
 A simple naming scheme is used: for each of the successive colors, a letter "L" or "R" is used to indicate whether a left or right turn should be taken.
-Langton's ant has the name "RL" in this naming scheme. This implementation currently supports up to 12 colors.
+Langton's ant has the name "RL" in this naming scheme. This implementation currently supports up to 12 colors. [1]
+
+[1] https://en.wikipedia.org/wiki/Langton%27s_ant
