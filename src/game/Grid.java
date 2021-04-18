@@ -36,7 +36,7 @@ public interface Grid {
   void performStep();
 
   /**
-   * Computes multiple rounds.
+   * Computes the specified number of rounds.
    * 
    * @param number the number of rounds to be computed
    */

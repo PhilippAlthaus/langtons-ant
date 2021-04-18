@@ -19,7 +19,7 @@ public class Shell {
   // ANSI escape sequence to reset the color
   private static final String ANSI_RESET = "\u001B[0m";
 
-  // state config representation
+  // state configuration representation
   private static final char TURN_RIGHT = 'R';
   private static final char TURN_LEFT = 'L';
 
@@ -58,7 +58,7 @@ public class Shell {
   /**
    * Helper method to run the default mode.
    * 
-   * @throws IOException if a problem with the InputStream occurs
+   * @throws IOException if the InputStream fails
    */
   private static void runAnt(final BufferedReader stdin) throws IOException {
     Grid game = null;

@@ -12,7 +12,7 @@ import java.util.Map;
 public class Board implements Grid {
 
   // integer representation of where the ant has to turn
-  // this should actually be a boolean or an enum
+  // this should actually be an enum, especially if more moves are added
   private static final int TURN_RIGHT = 0;
   private static final int TURN_LEFT = 1;
 
@@ -192,13 +192,13 @@ public class Board implements Grid {
   }
 
   /** Returns a downsized grid and adjusts the position of the ant. */
-  private Cell[][] downsizeGrid(int cols, int rows) {
-    Cell[][] downsizedGrid = new Cell[cols][rows];
-    int xAxisShift = (getWidth() - cols) / 2;
+  private Cell[][] downsizeGrid(int columns, int rows) {
+    Cell[][] downsizedGrid = new Cell[columns][rows];
+    int xAxisShift = (getWidth() - columns) / 2;
     int yAxisShift = (getHeight() - rows) / 2;
 
     // adjust the grid
-    for (int x = 0; x < cols; x++) {
+    for (int x = 0; x < columns; x++) {
       for (int y = 0; y < rows; y++) {
         if (y < getWidth() && x < getHeight()) {
           downsizedGrid[x][y] = grid[x + xAxisShift][y + yAxisShift];
@@ -212,8 +212,11 @@ public class Board implements Grid {
     if (ant != null) {
       int antX = ant.getX();
       int antY = ant.getY();
-      if (antX >= cols + xAxisShift || antY >= rows + yAxisShift || antX < xAxisShift
-          || antY < yAxisShift) {
+
+      boolean xIsOutOfRange = antX >= columns + xAxisShift || antX < xAxisShift;
+      boolean yIsOutOfRange = antY >= rows + yAxisShift || antY < yAxisShift;
+
+      if (xIsOutOfRange || yIsOutOfRange) {
         // ant is out of range
         ant = null;
       } else {
